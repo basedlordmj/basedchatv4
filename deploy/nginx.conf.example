@@ -1,0 +1,30 @@
+# Example nginx site config for basedchat.
+# Copy to /etc/nginx/sites-available/basedchat, edit the domain, then:
+#   sudo ln -s /etc/nginx/sites-available/basedchat /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+# Run `sudo certbot --nginx -d your-domain.com` afterward to add HTTPS —
+# certbot will rewrite this file to add the SSL server block automatically.
+
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    # Video uploads can be large; raise the body size limit to match MAX_VIDEO_MB in .env
+    client_max_body_size 220M;
+
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+
+        # Required for Socket.io's WebSocket upgrade
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_read_timeout 60s;
+    }
+}
